@@ -1,0 +1,6 @@
+# Copia este archivo como db.properties (en esta misma carpeta) y pon tus datos.
+# db.properties NO se sube a GitHub (está en .gitignore): cada integrante tiene el suyo.
+
+db.url=jdbc:sqlserver://localhost:1433;databaseName=CrediManager;encrypt=true;trustServerCertificate=true
+db.usuario=sa
+db.contrasena=TU_CONTRASENA
