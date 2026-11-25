@@ -51,6 +51,7 @@ src/main/webapp   Vistas JSP, includes y recursos (css, js, img)
 
 ## Trabajo con Git
 
-- `main`: versión estable. `develop`: integración diaria.
-- Una rama por tarea: `feature/prestamos-servicio`, `feature/vistas-clientes`...
-- Todo entra a `develop` por Pull Request revisado por otro integrante.
+- `main`: rama principal del proyecto.
+- Una rama por tarea, creada desde `main`: `feature/prestamos-servicio`, `feature/vistas-clientes`...
+- Todo entra a `main` por Pull Request revisado por otro integrante.
+- Antes de empezar a trabajar: `git pull origin main`.
