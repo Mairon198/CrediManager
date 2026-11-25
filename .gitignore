@@ -1,21 +1,33 @@
-# Compilación de Maven
-target/
-
-# Configuración local de NetBeans / IntelliJ / VS Code
+# Maven / NetBeans
+/target/
 nbproject/private/
-nbactions.xml
+nbactions*.xml
+nb-configuration.xml
+build/
+dist/
+
+# IDEs
 .idea/
 *.iml
 .vscode/
+.settings/
+.classpath
+.project
 
-# Credenciales de la base de datos (cada quien tiene su copia local)
-src/main/resources/db.properties
-
-# Sistema operativo
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Varios
+# Java
 *.class
 *.log
+hs_err_pid*
+
+# Datos de conexión (contienen la contraseña): cada integrante tiene su copia local
+config.properties
+db.properties
+
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Los manuales se entregan por aparte
+docs/*.docx
+docs/~$*

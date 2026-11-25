@@ -1,82 +1,56 @@
 # CrediManager
 
-Sistema web para una empresa de préstamos. Java 17 + Jakarta EE (Servlets/JSP), Apache Tomcat, SQL Server.
+Sistema web para la gestión de una empresa de **préstamos**: clientes, tipos de préstamo,
+solicitudes, aprobación, desembolso con plan de pagos, cobro de cuotas con mora, garantías,
+fiadores y reportes.
 
-## Cómo correr el proyecto
+Sigue los mismos lineamientos del proyecto **AutoTech Manager**.
 
-1. Abrir la carpeta en NetBeans (es un proyecto Maven) y configurar Tomcat como servidor.
-2. Crear la base de datos `CrediManager` en SQL Server con los scripts de la carpeta `database/`.
-3. Copiar `src/main/resources/db.properties.example` como `src/main/resources/db.properties` y poner usuario y contraseña de SQL Server. Este archivo **no se sube a GitHub**.
-4. En SQL Server Configuration Manager, verificar que TCP/IP esté habilitado y el puerto sea 1433.
-5. Probar la conexión: clic derecho en `src/test/java/.../PruebaDAO.java` → **Run File**.
-6. Ejecutar el proyecto (Run). Abre en `http://localhost:8080/CrediManager`.
+## Tecnologías
 
-## Arquitectura
+- Java 17 (Maven, NetBeans) con Jakarta EE: Servlets + JSP + JSTL, Apache Tomcat
+- JDBC con Microsoft SQL Server
+- Arquitectura por capas: presentación (`controlador` + JSP), negocio (`servicio`) y datos (`dao`, `conexion`)
+
+## Cómo ejecutarlo
+
+1. En SSMS ejecutar `database/CrediManagerDB.sql` sobre la base **CrediManager** (F5).
+   Crea tablas, funciones, triggers, procedimientos, vistas y datos de prueba.
+2. Copiar `src/main/resources/config.properties.example` como `config.properties` (misma carpeta)
+   y escribir los datos de conexión.
+3. Probar la conexión: clic derecho en `src/test/java/prueba/PruebaConexion.java` → *Run File*.
+4. Abrir el proyecto en NetBeans, hacer *Clean and Build* y ejecutar en Tomcat.
+5. Usuarios de prueba: `admin` / `Admin2026` (ADMIN), `asesor` / `Asesor2026` (ASESOR),
+   `cajero` / `Cajero2026` (CAJERO). En la base solo se guarda su huella cifrada (PBKDF2-SHA256).
+
+## Estructura
 
 ```
-JSP (vista) → Servlet (controller) → Service (reglas de negocio) → DAO → SQL Server
+database/   Script SQL (tablas, funciones, triggers, procedimientos, vistas y datos de prueba)
+src/main/java
+├── conexion      ConexionDB
+├── dao           Contratos de persistencia (y dao/impl con JDBC)
+├── servicio      Reglas de negocio
+├── controlador   Servlets
+├── filtro        Control de sesión y permisos por rol
+├── modelo        Entidades y enums
+├── excepciones   Excepciones del sistema
+└── util          Configuración, validaciones, formato, sesión y cifrado de contraseñas
+src/main/webapp   Vistas JSP, includes y recursos (css, js, img)
 ```
 
-| Paquete | Qué contiene | Responsable |
-| --- | --- | --- |
-| `config` | `Conexion`, `Constantes` | Integrante 1 |
-| `model` | Clases entidad (una por tabla) | Integrante 1 |
-| `dao` | `ICrud<T>` y un DAO por tabla | Integrante 1 |
-| `util` | `PasswordUtil`, `FechaUtil`, `Validador`, `FormatoMoneda` | Integrante 1 |
-| `service` | Reglas de negocio | Integrantes 2 y 3 |
-| `controller` | Servlets | Integrantes 2 y 3 |
-| `filter` | `AuthFilter` | Integrante 2 |
-| `webapp/views` | JSP | Integrante 3 |
+## Base de datos
 
-Reglas:
-
-- Los Servlets llaman a un **Service**, nunca a un DAO directamente.
-- No hay SQL fuera de los DAO ni lógica de negocio en las JSP.
-- El dinero siempre es `BigDecimal`; las fechas, `LocalDate`.
-- Los DAO lanzan `DAOException` (no hay que declarar `throws SQLException`); el Servlet la atrapa y muestra `e.getMessage()`.
-- Roles, estados y métodos de pago se escriben con `Constantes`, nunca con texto suelto.
-
-## Métodos útiles de los DAO (además del CRUD)
-
-| DAO | Métodos extra |
-| --- | --- |
-| `UsuarioDAO` | `buscarPorUsuario`, `existeUsuario`, `cambiarContrasena`, `listarRoles` |
-| `ClienteDAO` | `buscarPorDni`, `existeDni`, `buscar(texto, pagina, tamano)`, `contar(texto)` |
-| `TipoPrestamoDAO` | `existeNombre` |
-| `PrestamoDAO` | `listarPorCliente`, `listarPorEstado`, `actualizarEstado`, `aprobarConPlan` (transacción), `contarPorEstado`, `sumarMontoPorEstado` |
-| `CuotaDAO` | `listarPorPrestamo`, `listarVencidas`, `siguientePendiente`, `contarNoPagadas`, `actualizarEstado`, `marcarVencidas`, `insertarLote` |
-| `PagoDAO` | `registrarPago` (transacción), `listarPorCuota`, `listarPorPrestamo`, `listarPorFechas`, `totalCobrado` |
-| `GarantiaDAO`, `FiadorDAO` | `listarPorPrestamo` |
-
-## Base de datos: nombres que esperan los DAO
-
-Las tablas y columnas deben llamarse exactamente así. Los IDs son `INT IDENTITY(1,1) PRIMARY KEY`.
-
-| Tabla | Columnas |
-| --- | --- |
-| `rol` | `id_rol`, `nombre` |
-| `usuario` | `id_usuario`, `nombre`, `usuario` (único), `contrasena_hash` (NVARCHAR(200)), `id_rol` → rol, `activo` (BIT) |
-| `cliente` | `id_cliente`, `dni` (único, 13 dígitos sin guiones), `nombres`, `apellidos`, `telefono`, `direccion`, `correo`, `ocupacion`, `ingreso_mensual` (DECIMAL(12,2)) |
-| `tipo_prestamo` | `id_tipo`, `nombre` (único), `tasa_interes_anual` (DECIMAL(5,2)), `plazo_max_meses` (INT), `monto_max` (DECIMAL(12,2)), `porcentaje_mora` (DECIMAL(5,2)) |
-| `prestamo` | `id_prestamo`, `id_cliente` → cliente, `id_tipo` → tipo_prestamo, `id_usuario` → usuario, `monto` (DECIMAL(12,2)), `plazo_meses` (INT), `tasa` (DECIMAL(5,2)), `cuota` (DECIMAL(12,2), NULL), `fecha_solicitud` (DATE), `fecha_aprobacion` (DATE, NULL), `estado` (VARCHAR(20)) |
-| `cuota` | `id_cuota`, `id_prestamo` → prestamo, `numero` (INT), `fecha_vencimiento` (DATE), `capital`, `interes`, `monto_total`, `saldo` (DECIMAL(12,2)), `estado` (VARCHAR(20)) |
-| `pago` | `id_pago`, `id_cuota` → cuota, `id_usuario` → usuario, `fecha_pago` (DATE), `monto_pagado` (DECIMAL(12,2)), `mora` (DECIMAL(12,2), default 0), `metodo_pago` (VARCHAR(20)) |
-| `garantia` | `id_garantia`, `id_prestamo` → prestamo, `tipo` (VARCHAR(20)), `descripcion`, `valor_estimado` (DECIMAL(12,2)) |
-| `fiador` | `id_fiador`, `id_prestamo` → prestamo, `dni`, `nombres`, `telefono`, `ingreso_mensual` (DECIMAL(12,2)) |
-
-Valores de texto que usa el código (ver `Constantes`):
-
-- `rol.nombre`: `Administrador`, `Asesor`, `Cajero`
-- `prestamo.estado`: `SOLICITADO`, `APROBADO`, `RECHAZADO`, `ACTIVO`, `EN_MORA`, `CANCELADO`
-- `cuota.estado`: `PENDIENTE`, `PAGADA`, `VENCIDA`
-- `pago.metodo_pago`: `EFECTIVO`, `TRANSFERENCIA`, `TARJETA`
-- `garantia.tipo`: `HIPOTECARIA`, `PRENDARIA`, `OTRA`
-
-Para insertar usuarios de prueba, generar el hash de la contraseña ejecutando `PasswordUtil.java` (Run File): imprime el hash de `admin123`, `asesor123` y `cajero123`.
+- Tablas en PascalCase (`dbo.Prestamos`), columnas en snake_case (`prestamo_id`).
+- Flujo del préstamo: `SOLICITADO → APROBADO → ACTIVO ↔ EN_MORA → CANCELADO`
+  (o `RECHAZADO`). Lo validan los procedimientos y el enum `EstadoPrestamo`.
+- Procedimientos: `sp_RegistrarSolicitud`, `sp_AprobarPrestamo`, `sp_DesembolsarPrestamo`
+  (genera las cuotas), `sp_RegistrarPago`, `sp_CambiarEstadoPrestamo`, `sp_ActualizarMora`.
+- La cuota se calcula con el sistema francés (`fn_CalcularCuota`) y no puede pasar del 40 %
+  del ingreso mensual del cliente.
 
 ## Trabajo con Git
 
 - `main`: versión estable. `develop`: integración diaria.
-- Una rama por tarea: `feature/prestamos-servicio`, `feature/vistas-clientes`, etc.
+- Una rama por tarea: `feature/prestamos-servicio`, `feature/vistas-clientes`...
 - Todo entra a `develop` por Pull Request revisado por otro integrante.
-- Antes de abrir un PR: `git pull origin develop`, resolver conflictos y verificar que compila.

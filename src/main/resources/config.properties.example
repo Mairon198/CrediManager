@@ -1,0 +1,9 @@
+# Copie este archivo con el nombre config.properties (en esta misma carpeta, src/main/resources)
+# y escriba los datos reales de conexión. config.properties NO se sube a GitHub.
+#
+# SQL Server instalado en su computadora (instancia por defecto, puerto 1433):
+db.url=jdbc:sqlserver://localhost:1433;databaseName=CrediManager;encrypt=true;trustServerCertificate=true;loginTimeout=30;
+# Si usa SQL Server Express, cambie la línea anterior por:
+# db.url=jdbc:sqlserver://localhost\\SQLEXPRESS;databaseName=CrediManager;encrypt=true;trustServerCertificate=true;loginTimeout=30;
+db.user=USUARIO
+db.password=CONTRASEÑA
